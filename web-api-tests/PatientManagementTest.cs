@@ -20,7 +20,7 @@ namespace web_api_tests
             _logger = logger;
             _config = config;
             _service = new PatientRepository(_logger, _config);
-            _controller = new PatientsController(_logger,_service);
+            _controller = new PatientsController(_logger, _service);
         }
 
         [Fact]
@@ -49,7 +49,7 @@ namespace web_api_tests
         public void GetPatientById_KnownIdPassed_ReturnsOkResult()
         {
             var patientId = 5;
-            var okResult = _controller.GetPatientByID(patientId);            
+            var okResult = _controller.GetPatientByID(patientId);
             Assert.IsType<OkObjectResult>(okResult as IEnumerable<Patients>);
         }
 
