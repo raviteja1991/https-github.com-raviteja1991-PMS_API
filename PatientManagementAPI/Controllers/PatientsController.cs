@@ -15,10 +15,14 @@ namespace PatientManagementAPI.Controllers
     [ApiController]
     public class PatientsController : ControllerBase
     {
+        private readonly ILogger<PatientsController> _logger;
+
         private readonly IPatientRepository _patienrRepo;
 
-        public PatientsController(IPatientRepository patienrRepo)
+        public PatientsController(ILogger<PatientsController> logger, IPatientRepository patienrRepo)
         {
+            _logger = logger;
+
             _patienrRepo = patienrRepo;
         }
 

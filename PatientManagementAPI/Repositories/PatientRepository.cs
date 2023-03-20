@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using PatientManagementAPI.Controllers;
 using PatientManagementAPI.Models;
 using System.Data.SqlClient;
 
@@ -8,26 +9,46 @@ namespace PatientManagementAPI.Repositories
     public class PatientRepository : IPatientRepository
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<PatientsController> _logger;
 
-        public PatientRepository(IConfiguration config)
+        public PatientRepository(ILogger<PatientsController> logger, IConfiguration config)
         {
+            _logger = logger;
+
             _config = config;
         }
 
         public async Task<IEnumerable<Patients>> GetAllPatients()
         {
-            using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            IEnumerable<Patients> patients = Enumerable.Empty<Patients>();
+            try
+            {
+                using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
-            IEnumerable<Patients> patients = await SelectAllPatients(connection);
+                patients = await SelectAllPatients(connection);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+            }
             return patients.ToList();
         }
 
         public async Task<Patients> GetPatientByID(int patientID)
         {
-            using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            var patient = new Patients { };
 
-            var patient = await connection.QueryFirstAsync<Patients>("Select * from MainSchema.Patients where PatientID = @PatientID",
-                new { PatientID = patientID });
+            try
+            {
+                using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+
+                patient = await connection.QueryFirstAsync<Patients>("Select * from MainSchema.Patients where PatientID = @PatientID",
+                    new { PatientID = patientID });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+            }
             return patient;
         }
 
@@ -35,9 +56,15 @@ namespace PatientManagementAPI.Repositories
         {
             using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
-            await connection.ExecuteAsync("insert into MainSchema.Patients (FirstName, LastName, FullName, DOB, Age, Gender, PatientAddress, EmailAddress, PhoneNumber) " +
-            "values (@FirstName, @LastName, @FullName, @DOB, @Age, @Gender, @PatientAddress, @EmailAddress, @PhoneNumber)", patient);
-
+            try
+            {
+                await connection.ExecuteAsync("insert into MainSchema.Patients (FirstName, LastName, FullName, DOB, Age, Gender, PatientAddress, EmailAddress, PhoneNumber) " +
+                "values (@FirstName, @LastName, @FullName, @DOB, @Age, @Gender, @PatientAddress, @EmailAddress, @PhoneNumber)", patient);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+            }
             return await SelectAllPatients(connection);
         }
 
@@ -45,10 +72,16 @@ namespace PatientManagementAPI.Repositories
         {
             using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
-            await connection.ExecuteAsync("update MainSchema.Patients set FirstName=@FirstName, LastName=@LastName," +
-                " FullName=@FullName, DOB=@DOB, Age=@Age, Gender=@Gender, PatientAddress=@PatientAddress, EmailAddress=@EmailAddress," +
-                " PhoneNumber=@PhoneNumber where PatientID=@PatientID", patient);
-
+            try
+            {
+                await connection.ExecuteAsync("update MainSchema.Patients set FirstName=@FirstName, LastName=@LastName," +
+                    " FullName=@FullName, DOB=@DOB, Age=@Age, Gender=@Gender, PatientAddress=@PatientAddress, EmailAddress=@EmailAddress," +
+                    " PhoneNumber=@PhoneNumber where PatientID=@PatientID", patient);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+            }
             return await SelectAllPatients(connection);
         }
 
@@ -56,8 +89,14 @@ namespace PatientManagementAPI.Repositories
         {
             using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
-            await connection.ExecuteAsync("delete from mainschema.patients where PatientID=@PatientID", new { PatientID = patientID });
-
+            try
+            {
+                await connection.ExecuteAsync("delete from mainschema.patients where PatientID=@PatientID", new { PatientID = patientID });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+            }
             return await SelectAllPatients(connection);
         }
 

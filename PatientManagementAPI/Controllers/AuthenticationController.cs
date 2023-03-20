@@ -13,9 +13,11 @@ namespace PatientManagementAPI.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<PatientsController> _logger;
 
-        public AuthenticationController(IConfiguration config)
+        public AuthenticationController(ILogger<PatientsController> logger, IConfiguration config)
         {
+            _logger = logger;
             _config = config;
         }
 
@@ -34,20 +36,27 @@ namespace PatientManagementAPI.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {
-            if (user is null)
+            try
             {
-                return BadRequest("Invalid user request!!!");
-            }
-            if (user.UserName == "raviteja" && user.Password == "password123!")
-            {
-                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigurationManager.AppSetting["JwtSettings:SecretKey"]));
-                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-                var tokeOptions = new JwtSecurityToken(issuer: ConfigurationManager.AppSetting["JwtSettings:Issuer"], audience: ConfigurationManager.AppSetting["JwtSettings:Audience"], claims: new List<Claim>(), expires: DateTime.Now.AddMinutes(6), signingCredentials: signinCredentials);
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
-                return Ok(new JWTTokenResponse
+                if (user is null)
                 {
-                    Token = tokenString
-                });
+                    return BadRequest("Invalid user request!!!");
+                }
+                if (user.UserName == "raviteja" && user.Password == "password123!")
+                {
+                    var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(ConfigurationManager.AppSetting["JwtSettings:SecretKey"]));
+                    var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+                    var tokeOptions = new JwtSecurityToken(issuer: ConfigurationManager.AppSetting["JwtSettings:Issuer"], audience: ConfigurationManager.AppSetting["JwtSettings:Audience"], claims: new List<Claim>(), expires: DateTime.Now.AddMinutes(6), signingCredentials: signinCredentials);
+                    var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+                    return Ok(new JWTTokenResponse
+                    {
+                        Token = tokenString
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
             }
             return Unauthorized();
         }
