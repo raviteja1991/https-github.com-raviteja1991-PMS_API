@@ -27,7 +27,7 @@ namespace web_api_tests
         public void Get_AllPatients_WhenCalled_ReturnsOkResult()
         {
             var okResult = _controller.GetAllPatients();
-            Assert.IsType<Patients>(okResult as IEnumerable<Patients>);
+            Assert.IsType<OkObjectResult>(okResult as IEnumerable<Patients>);
         }
 
         [Fact]
@@ -38,6 +38,28 @@ namespace web_api_tests
             Assert.Equal(6, items.Count);
         }
 
+        [Fact]
+        public void GetPatientById_UnknownIdPassed_ReturnsNotFoundResult()
+        {
+            var notFoundResult = _controller.GetPatientByID(1);
+            Assert.IsType<NotFoundResult>(notFoundResult);
+        }
 
+        [Fact]
+        public void GetPatientById_KnownIdPassed_ReturnsOkResult()
+        {
+            var patientId = 5;
+            var okResult = _controller.GetPatientByID(patientId);            
+            Assert.IsType<OkObjectResult>(okResult as IEnumerable<Patients>);
+        }
+
+        [Fact]
+        public void GetPatientById_KnownIdPassed_ReturnsRightItem()
+        {
+            var patientId = 7;
+            var okResult = _controller.GetPatientByID(patientId) as IEnumerable<Patients>;
+            Assert.IsType<Patients>(okResult);
+            Assert.Equal(patientId, (okResult as Patients).PatientID);
+        }
     }
 }
